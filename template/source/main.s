@@ -39,7 +39,13 @@ main:
 	.unreq pinFunc
 
 
-	loop$:
+	ptrn .req r4
+	ldr ptrn, =pattern	// put the value of pattern (addr of the .int?) in ptrn
+	ldr ptrn, [ptrn]	// load whatever in that addr into ptrn
+	seq .req r5
+	mov seq, #0
+	
+loop$:
 	/*
 	* Turn the LED on
 	*/
@@ -47,7 +53,9 @@ main:
 	pinVal .req r1
 	
 	mov pinNum, #47
-	mov pinVal, #0
+	mov pinVal, #1
+	lsl pinVal, seq
+	and pinVal, ptrn // for seq n, if ptrn == 1, send a non-zero to SetGpio, turn on LED
 	bl SetGpio
 	
 	.unreq pinNum
@@ -56,27 +64,17 @@ main:
 	/*
 	* Wait for sometime (using the Wait function in systemTimer)
 	*/
-	ldr r0, =1000000
+	ldr r0, =250000
 	bl Wait
 	
-	/*
-	* Turn the LED off
-	*/
-	pinNum .req r0
-	pinVal .req r1
-
-	mov pinNum, #47
-	mov pinVal, #1
-	bl SetGpio
-
-	.unreq pinNum
-	.unreq pinVal
-
-
-	/*
-	* Wait for sometime
-	*/
-	ldr r0, =1000000
-	bl Wait
+	add seq, #1		// increament the counter;
+	and seq, #0b11111	// effectively seq mod 32
 	
 	b loop$
+
+	
+.section .data
+.align 2			// IMPORTANT! ldr only works at addresses that are multiples of 4
+				// .align num ensures the address of the next line is a multiple of 2^num
+pattern:	
+	.int 0b00000000010101011101110111010101

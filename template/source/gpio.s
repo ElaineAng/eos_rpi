@@ -81,8 +81,8 @@ SetGpio:
 	teq pinVal, #0		// Test the value in pinVal against #0
 				// Updates the conditional flags on the result without placing it in any reg
 	.unreq pinVal
-	streq setBit, [gpioAddr, #0x1c] // If pinVal is 0, turn off the pin, which turn on LED (?)
-	strne setBit, [gpioAddr, #0x28] // If pinVal is not 0, turn on the pin, which turn off LED (?)
+	strne setBit, [gpioAddr, #0x1c] // If pinVal is not 0, set a bit for the pin, which turn on LED
+	streq setBit, [gpioAddr, #0x28] // If pinVal is 0, clear the bit for the pin, which turn off LED
 
 	.unreq setBit
 	.unreq gpioAddr
