@@ -33,7 +33,7 @@ main:
 	mov pinNum, #47
 	mov pinFunc, #1
 
-	bl SetGpioFunction
+	bl SetGpioFunction	// bl: branch with link, it copies the addr of next instruction into lr (r14)
 
 	.unreq pinNum
 	.unreq pinFunc
@@ -54,16 +54,10 @@ main:
 	.unreq pinVal
 
 	/*
-	* Wait for sometime (for 0x3F0000 to decrease to 0)
+	* Wait for sometime (using the Wait function in systemTimer)
 	*/
-	decr .req r2
-	mov decr, #0x3F0000
-
-	wait1$:
-		sub decr, #1
-		teq decr, #0	// teq does not affect V or C flag but cmp do
-		bne wait1$
-	.unreq decr
+	ldr r0, =1000000
+	bl Wait
 	
 	/*
 	* Turn the LED off
@@ -82,12 +76,7 @@ main:
 	/*
 	* Wait for sometime
 	*/
-	decr .req r2
-	mov decr, #0x3F0000
-	wait2$:
-		sub decr, #1
-		teq decr, #0
-		bne wait2$
-	.unreq decr
-
+	ldr r0, =1000000
+	bl Wait
+	
 	b loop$
