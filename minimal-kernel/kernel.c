@@ -106,14 +106,22 @@ void uart_init()
 
 void uart_putc(unsigned char c)
 {
-	// Wait for UART to become ready to transmit.
+	/* Wait for UART to become ready to transmit.
+    The lower 5th bit in UART0_FR is TXFF (transmit FIFO Full)
+    If the FIFO is enabled, the TXFF bit is set when the transmit FIFO is full
+    If the FIFO is disabled, this bit is set when the transmit holding register is full
+  */
 	while ( mmio_read(UART0_FR) & (1 << 5) ) { }
 	mmio_write(UART0_DR, c);
 }
 
 unsigned char uart_getc()
 {
-    // Wait for UART to have received something.
+    /* Wait for UART to have received something.
+      The lower 4th bit in UART0_FR is RXFF (receive FIFO Full)
+      If the FIFO is disabled, this bit is set when the receive FIFO is full
+      If the FIFO is disabled, this bit is set when the receive holding register is full.    
+    */
     while ( mmio_read(UART0_FR) & (1 << 4) ) { }
     return mmio_read(UART0_DR);
 }
