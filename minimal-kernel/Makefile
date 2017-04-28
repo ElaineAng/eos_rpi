@@ -8,7 +8,7 @@ CC = $(GCCPREFIX)gcc
 OBJDUMP = $(GCCPREFIX)objdump
 OBJCOPY = $(GCCPREFIX)objcopy
 
-TARGET = $(OS).elf
+TARGET = $(OS).img
 
 # GDBPORT	:= $(shell expr `id -u` % 5000 + 24000)
 QEMUOPTS = -kernel $(TARGET) -M raspi2 -m 256 -serial mon:stdio -D qemu.log -nographic
