@@ -107,9 +107,11 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	(void) atags;
 
 	uart_init();
-	uart_puts("Hello World!\n> ");
-	
-	char command[10] = "help";
+	//	uart_puts("Hello World!\n> ");
+	uart_puts("\nWelcome to the minimal kernel!\n");
+	uart_puts("Now the only supported command is 'info'\n> ");
+
+	char command[10] = "info";
 	char rec[10];
 	uint32_t i = 0;
 	char cur;
@@ -128,7 +130,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	      }
 	    }
 	    if (eq == 1){
-	      uart_puts("\nWelcome to the minimal kernel!\n> ");
+	      uart_puts("\n Raspberry Pi 2 Model B\n> ");
 	    }else{
 	      eq = 1;
 	      uart_puts("\nCommand not found\n> ");
