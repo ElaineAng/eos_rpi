@@ -1,0 +1,7 @@
+#ifndef HARDWARE_H
+#define HARDWARE_H
+
+#define MMIO_BASE_PHYSICAL 0x3F000000
+#define TOTAL_MEMORY_SIZE 0x3FF00000
+
+#endif

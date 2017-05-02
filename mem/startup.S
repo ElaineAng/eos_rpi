@@ -1,0 +1,52 @@
+#include <mmu.h>
+#include <proc.h>
+
+.global entry
+entry:
+	ldr sp, =kernel_stack_start
+
+	bl enable_paging
+
+	/*
+	bl copy_interrupt_table
+	bl use_high_interrupts
+	bl enable_interrupts
+	*/
+
+	bl jump_to_high_mem
+
+	bl c_entry
+	
+enable_paging:
+	mov r2, lr
+	mov r0, #1
+
+	bl set_domain_access_control
+
+	ldr r0, =startup_sectiontable
+	sub r0, #KERNEL_BASE
+	bl set_translation_table_base
+
+	bl read_control_register
+	orr r0, #1
+	bl set_control_register
+
+	mov pc, r2
+
+/*
+copy_interrupt_table:
+	mov r0, #0x0
+	ldr r1, =interrupt_table_start
+
+interrupt_table_start:
+	subs pc, lr, #4
+	ldr pc, syscall_entry_address
+	subs pc, lr, #4
+
+syscall_entry_address:
+	.word syscall_entry
+
+syscall_entry:
+	ldr sp, =kernel_stack_start
+	SAVE_CONTEXT 
+*/
