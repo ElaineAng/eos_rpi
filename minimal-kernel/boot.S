@@ -13,22 +13,23 @@ _start:
   mov r5, #0
   mov r6, #0
   mov r7, #0
-  mov r8, #0
+  mov r8, #0	
+
   b 2f  // branch jump forwards
 
   1:
-    /*Registers are loaded stored and in numerical order,
-    with the lowest numbered register at the address initially in Rn.
-      The value in Rn is incremented by 4 times the number of registers in reglist.
-    */
+    /* Registers are loaded stored and in numerical order,
+     * with the lowest numbered register at the address initially in Rn.
+     * The value in Rn is incremented by 4 times the number of registers in reglist.
+     */
     stmia r4!, {r5-r8}
 
   2:
     cmp r4, r9
     /* BLO is a synonym for BCC; it performs a conditional branch
-    based on the carry © flag being clear in the PSR,
-    which is the case when one unsigned value compares lower (LO) than another.
-    */
+     * based on the carry © flag being clear in the PSR,
+     * which is the case when one unsigned value compares lower (LO) than another.
+     */
     blo 1b //jump backwards
 
     // Call kernel_main

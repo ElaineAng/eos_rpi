@@ -14,6 +14,13 @@ enum
     // The base address for UART.
     UART0_BASE = 0x3F201000, // for raspi2 & 3, 0x20201000 for raspi1
 
+    GPFSEL1 = (GPIO_BASE + 0x4),
+
+    GPFSEL4 = (GPIO_BASE + 0x10),
+
+    GPSET1 = (GPIO_BASE + 0x20),
+
+    GPCLR1 = (GPIO_BASE + 0x2C),
     // The offsets for reach register for the UART.
     UART0_DR     = (UART0_BASE + 0x00),
     UART0_RSRECR = (UART0_BASE + 0x04),

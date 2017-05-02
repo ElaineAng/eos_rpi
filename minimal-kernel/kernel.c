@@ -3,12 +3,12 @@
 // these are part of the compiler
 
 #include <stddef.h>
-#include <stdint.h>
+//#include <stdint.h>
 #include "uart.h"
 
 // Memory mapped I/O output
 
-static inline void mmio_write(uint32_t reg, uint32_t data){
+static inline void mmio_write(unsigned int reg, unsigned int data){
 
   // volatile indicates that the variable reg may change at any time --
   // without any action being taken by the code nearby
@@ -23,16 +23,20 @@ static inline uint32_t mmio_read(uint32_t reg){
 static inline void delay(int32_t count)
 {
   asm volatile("__delay_%=: subs %[count], %[count], #1; bne __delay_%=\n"
-	       : "=r"(count): [count]"0"(count) : "cc");
+	       : "=r"(count)
+	       : [count]"0"(count) 
+	       : "cc");
 }
-
 
 void uart_init()
 {
   // Disable UART0.
   mmio_write(UART0_CR, 0x00000000);
+
   // Setup the GPIO pin 14 && 15.
-  
+  mmio_write(GPFSEL1, (1 << 14) | (1<<17)); 
+  mmio_write(GPFSEL4, (1<<21)); 
+
   // Disable pull up/down for all GPIO pins & delay for 150 cycles.
   mmio_write(GPPUD, 0x00000000);
   delay(150);
@@ -52,7 +56,6 @@ void uart_init()
   // Fraction part register = (Fractional part * 64) + 0.5
   // UART_CLOCK = 3000000; Baud = 115200. Baud for LCD: 9600
   
-
   // Divider = 3000000 / (16 * 115200) = 1.627 = ~1.
   //	mmio_write(UART0_IBRD, 1);
   mmio_write(UART0_IBRD, 19);
@@ -63,11 +66,12 @@ void uart_init()
   mmio_write(UART0_LCRH, (1 << 4) | (1 << 5) | (1 << 6));
   
   // Mask all interrupts.
-  mmio_write(UART0_IMSC, (1 << 1) | (1 << 4) | (1 << 5) | (1 << 6) |
-	     (1 << 7) | (1 << 8) | (1 << 9) | (1 << 10));
+  //mmio_write(UART0_IMSC, (1 << 1) | (1 << 4) | (1 << 5) | (1 << 6) |
+  //	     (1 << 7) | (1 << 8) | (1 << 9) | (1 << 10));
 
   // Enable UART0, receive & transfer part of UART.
   mmio_write(UART0_CR, (1 << 0) | (1 << 8) | (1 << 9));
+ 
 }
 
 void uart_putc(unsigned char c)
@@ -100,13 +104,13 @@ void uart_puts(const char* str)
    
 }
 
-void uart_putAscii(uint32_t asc)
+void uart_putAscii(uint8_t asc)
 {
   while ( mmio_read(UART0_FR) & (1 << 5) ){}
   mmio_write(UART0_DR, asc);
 }
 
-void uart_puts_asc(const uint32_t* na, size_t size)
+void uart_puts_asc(const uint8_t* na, size_t size)
 {
   for (size_t i = 0; i<size; i++)
     uart_putAscii(na[i]);
@@ -124,9 +128,21 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
   (void) atags;
   
   uart_init();
-  uint32_t cmd[] = {0xAA, 0x25, 0x41, 0x42, 0x43, 0x0d};
-  //uart_puts("hello!\n");
-  uart_puts_asc(cmd, 6);
+  uint8_t cmd[] = {0xAA, 0x25, 0x41, 0x42, 0x43, 0x0D};
+ 
+  // uart_puts("hello!\n");
+
+  
+  while (1){
+    uart_puts_asc(cmd, 6);
+    mmio_write(GPSET1, (1 << 15));  
+    delay(0x3F0000);
+    uart_puts_asc(cmd, 6);
+    delay(0x3F0000);
+    mmio_write(GPCLR1, (1 << 15));
+    delay(0x3F0000);
+    
+  }
   //uart_puts_asc(cmd, 4);
   
   /*
