@@ -110,3 +110,5 @@ void uart_puts_asc(const uint8_t* na, size_t size)
     uart_put_ascii(na[i]);
 
 }
+
+//void uart_put_hex(uint

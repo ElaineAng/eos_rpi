@@ -42,7 +42,7 @@ gdb:
 	arm-none-eabi-gdb
 
 qemu-gdb: $(TARGET)
-	$(QEMU) $(QEMUOPTS) -gdb tcp::26000
+	$(QEMU) $(QEMUOPTS) -gdb tcp::26000 -S
 
 
 clean: 
