@@ -53,3 +53,5 @@ void uart_putc(unsigned char c);
 void uart_puts(const char * str);
 void uart_put_ascii(uint8_t asc);
 void uart_puts_asc(const uint8_t * na, size_t size);
+
+void delay(int32_t count);

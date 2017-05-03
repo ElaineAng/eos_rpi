@@ -13,7 +13,7 @@ uint32_t mmio_read(uint32_t reg){
 }
 
 // Loop <delay> times in a way that the compiler won't optimize away
-inline void delay(int32_t count)
+void delay(int32_t count)
 {
   asm volatile("__delay_%=: subs %[count], %[count], #1; bne __delay_%=\n"
 	       : "=r"(count)
@@ -52,9 +52,9 @@ void uart_init()
   
   // Divider = 3000000 / (16 * 115200) = 1.627 = ~1.
   //	mmio_write(UART0_IBRD, 1);
-  mmio_write(UART0_IBRD, 19);
+  mmio_write(UART0_IBRD, 325);
   // Fractional part register = (.627 * 64) + 0.5 = 40.6 = ~40.
-  mmio_write(UART0_FBRD, 34);
+  mmio_write(UART0_FBRD, 33);
 
   // Enable FIFO & 8 bit data transmissio (1 stop bit, no parity).
   mmio_write(UART0_LCRH, (1 << 4) | (1 << 5) | (1 << 6));
@@ -92,10 +92,11 @@ unsigned char uart_getc()
 
 void uart_puts(const char* str)
 {
-
+  uart_putc(0xAA);
+  uart_putc(0x25);
   for (size_t i = 0; str[i] != '\0'; i ++)
     uart_putc((unsigned char)str[i]);
-   
+  uart_putc(0x0D);
 }
 
 void uart_put_ascii(uint8_t asc)
@@ -106,9 +107,11 @@ void uart_put_ascii(uint8_t asc)
 
 void uart_puts_asc(const uint8_t* na, size_t size)
 {
-  for (size_t i = 0; i<size; i++)
+  for (size_t i = 0; i<size; i++){
+    //if (na[i] == 0x20)
+    //delay(0x3F00000);
     uart_put_ascii(na[i]);
-
+  }
 }
 
 //void uart_put_hex(uint
