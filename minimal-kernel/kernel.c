@@ -3,7 +3,7 @@
 // these are part of the compiler
 
 #include <stddef.h>
-//#include <stdint.h>
+#include <stdint.h>
 #include "uart.h"
 
 // Memory mapped I/O output
@@ -55,12 +55,13 @@ void uart_init()
   // Divider = UART_CLOCK/(16 * Baud)
   // Fraction part register = (Fractional part * 64) + 0.5
   // UART_CLOCK = 3000000; Baud = 115200. Baud for LCD: 9600
+  // UART_CLOCK = 50,000,000; Baud: 9600
   
   // Divider = 3000000 / (16 * 115200) = 1.627 = ~1.
   //	mmio_write(UART0_IBRD, 1);
-  mmio_write(UART0_IBRD, 19);
+  mmio_write(UART0_IBRD, 325);
   // Fractional part register = (.627 * 64) + 0.5 = 40.6 = ~40.
-  mmio_write(UART0_FBRD, 34);
+  mmio_write(UART0_FBRD, 33);
 
   // Enable FIFO & 8 bit data transmissio (1 stop bit, no parity).
   mmio_write(UART0_LCRH, (1 << 4) | (1 << 5) | (1 << 6));
