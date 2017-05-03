@@ -1,3 +1,5 @@
+#include <types.h>
+
 enum
 {
     // The GPIO registers base address.
@@ -41,3 +43,13 @@ enum
     UART0_ITOP   = (UART0_BASE + 0x88),
     UART0_TDR    = (UART0_BASE + 0x8C),
 };
+
+void uart_init();
+
+void mmio_write(uint32_t reg, uint32_t data);
+uint32_t mmio_read(uint32_t reg);
+
+void uart_putc(unsigned char c);
+void uart_puts(const char * str);
+void uart_put_ascii(uint8_t asc);
+void uart_puts_asc(const uint8_t * na, size_t size);
