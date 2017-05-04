@@ -2,6 +2,8 @@ SHELL = /bin/sh
 
 OS = kernel7
 QEMU = qemu-system-arm
+KERN_DIR = kernel
+
 GCCPREFIX = 'arm-none-eabi-'
 
 CC = $(GCCPREFIX)gcc 
@@ -10,10 +12,12 @@ OBJCOPY = $(GCCPREFIX)objcopy
 
 TARGET = $(OS).elf
 
-# GDBPORT	:= $(shell expr `id -u` % 5000 + 24000)
 QEMUOPTS = -kernel $(TARGET) -M raspi2 -m 256 -serial mon:stdio -D qemu.log -nographic
 
-CFLAGS := -O2 -Wall -Wextra -mcpu=cortex-a7 -fpic -ffreestanding -std=gnu99
+CFLAGS := -O2 -Wall -Wextra -mcpu=cortex-a7 -fpic -ffreestanding -std=gnu99 -I include
+
+OBJS = boot.o $(KERN_DIR)/uart.o $(KERN_DIR)/timer.o $(KERN_DIR)/kernel.o
+
 
 .PRECIOUS: %.o
 
@@ -22,24 +26,26 @@ all: $(TARGET)
 boot.o: boot.S
 	$(CC) $(CFLAGS) -c $< -o $@
 
-kernel.o: kernel.c
+$(KERN_DIR)/%.o: $(KERN_DIR)%.c 
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(TARGET): boot.o kernel.o linker.ld
-	$(CC) -T linker.ld -o $@ $(CFLAGS) -nostdlib boot.o kernel.o
+$(TARGET): $(OBJS) linker.ld
+	$(CC) -T linker.ld -o $@ $(CFLAGS) -nostdlib $(OBJS)
+	$(OBJCOPY) $(TARGET) -O binary $(OS).img
 
 qemu: $(TARGET)
 	$(QEMU) $(QEMUOPTS)
 
-img: $(TARGET)
-	$(OBJCOPY) $(TARGET) -O binary $(OS).img
+
+
 
 gdb:
 	arm-none-eabi-gdb
 
 qemu-gdb: $(TARGET)
-	$(QEMU) $(QEMUOPTS) -gdb tcp::26000
+	$(QEMU) $(QEMUOPTS) -gdb tcp::26000 -S
 
 
 clean: 
-	rm -f *.o *.elf *.img *.out
+	rm -f *.o *.elf *.img
+	rm -f $(KERN_DIR)/*.o

@@ -1,32 +1,26 @@
-// stddef has sise_t & NULL
-// stdint has intx_t & uintx_t
-// these are part of the compiler
-
-#include <stddef.h>
-#include <stdint.h>
-#include "uart.h"
+#include <uart.h>
 
 // Memory mapped I/O output
-
-static inline void mmio_write(unsigned int reg, unsigned int data){
+void mmio_write(unsigned int reg, unsigned int data){
 
   // volatile indicates that the variable reg may change at any time --
   // without any action being taken by the code nearby
   *(volatile uint32_t * )reg = data;
 }
 
-static inline uint32_t mmio_read(uint32_t reg){
+uint32_t mmio_read(uint32_t reg){
   return *(volatile uint32_t*) reg;
 }
 
 // Loop <delay> times in a way that the compiler won't optimize away
-static inline void delay(int32_t count)
+void delay(int32_t count)
 {
   asm volatile("__delay_%=: subs %[count], %[count], #1; bne __delay_%=\n"
 	       : "=r"(count)
 	       : [count]"0"(count) 
 	       : "cc");
 }
+
 
 void uart_init()
 {
@@ -51,24 +45,24 @@ void uart_init()
   // Clear pending interrupts.
   mmio_write(UART0_ICR, 0x7FF);
   
-  // Set integer & fractional part of baud rate.
-  // Divider = UART_CLOCK/(16 * Baud)
-  // Fraction part register = (Fractional part * 64) + 0.5
-  // UART_CLOCK = 3000000; Baud = 115200. Baud for LCD: 9600
-  // UART_CLOCK = 50,000,000; Baud: 9600
-  
-  // Divider = 3000000 / (16 * 115200) = 1.627 = ~1.
-  //	mmio_write(UART0_IBRD, 1);
+  /* Set integer & fractional part of baud rate.
+   * Divider = UART_CLOCK/(16 * Baud)
+   * Fraction part register = (Fractional part * 64) + 0.5
+   * UART_CLOCK = 50,000,000; Baud for LCD: 9600
+   */
+
+  // Divider = 50,000,000 / (16 * 9600) = 325.52 ~ 325
   mmio_write(UART0_IBRD, 325);
-  // Fractional part register = (.627 * 64) + 0.5 = 40.6 = ~40.
+  // Fractional part register = (.52 * 64) + 0.5 = 33.833 ~ 33
   mmio_write(UART0_FBRD, 33);
 
   // Enable FIFO & 8 bit data transmissio (1 stop bit, no parity).
   mmio_write(UART0_LCRH, (1 << 4) | (1 << 5) | (1 << 6));
   
-  // Mask all interrupts.
-  //mmio_write(UART0_IMSC, (1 << 1) | (1 << 4) | (1 << 5) | (1 << 6) |
-  //	     (1 << 7) | (1 << 8) | (1 << 9) | (1 << 10));
+  /* Mask all interrupts.
+   * mmio_write(UART0_IMSC, (1 << 1) | (1 << 4) | (1 << 5) | (1 << 6) |
+   	     (1 << 7) | (1 << 8) | (1 << 9) | (1 << 10));
+   */
 
   // Enable UART0, receive & transfer part of UART.
   mmio_write(UART0_CR, (1 << 0) | (1 << 8) | (1 << 9));
@@ -101,83 +95,35 @@ void uart_puts(const char* str)
 {
 
   for (size_t i = 0; str[i] != '\0'; i ++)
-    uart_putc((unsigned char)str[i]);
-   
+    uart_putc((unsigned char) str[i]);
+
 }
 
-void uart_putAscii(uint8_t asc)
+void uart_put_ascii(uint8_t asc)
 {
   while ( mmio_read(UART0_FR) & (1 << 5) ){}
   mmio_write(UART0_DR, asc);
 }
 
-void uart_puts_asc(const uint8_t* na, size_t size)
+void uart_puts_cmd(const uint8_t* na, size_t size)
 {
-  for (size_t i = 0; i<size; i++)
-    uart_putAscii(na[i]);
-
+  for (size_t i = 0; i<size; i++){
+    uart_put_ascii(na[i]);
+  }
 }
 
-#if defined(__cplusplus)
-extern "C" /* Use C linkage for kernel_main. */
-#endif
-void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
+void uart_write_to_lcd(const char * str)
 {
-  // Declare as unused
-  (void) r0;
-  (void) r1;
-  (void) atags;
-  
-  uart_init();
-  uint8_t cmd[] = {0xAA, 0x25, 0x41, 0x42, 0x43, 0x0D};
- 
-  // uart_puts("hello!\n");
+  uart_put_ascii(0xAA);
+  uart_put_ascii(0x25);
+  uart_puts(str);
+  uart_put_ascii(0x0D);
+}
 
-  
-  while (1){
-    uart_puts_asc(cmd, 6);
-    mmio_write(GPSET1, (1 << 15));  
-    delay(0x3F0000);
-    uart_puts_asc(cmd, 6);
-    delay(0x3F0000);
-    mmio_write(GPCLR1, (1 << 15));
-    delay(0x3F0000);
-    
-  }
-  //uart_puts_asc(cmd, 4);
-  
-  /*
-  //	uart_puts("Hello World!\n> ");
-  uart_puts("\nWelcome to the minimal kernel!\n");
-  uart_puts("Now the only supported command is 'info'\n> ");
-  
-  char command[10] = "info";
-  char rec[10];
-  uint32_t i = 0;
-  char cur;
-  uint32_t eq = 1;
-  while (1){
-    cur = uart_getc();
-    uart_putc(cur);
-    if ((i < 10) && (cur != '\r')){
-      rec[i] = cur;
-      i++;
-    } else{
-      
-      for (size_t j=0; j<i; j++){
-	if (command[j] != rec[j]){
-	  eq = 0;
-	}
-      }
-      if (eq == 1){
-	uart_puts("\n Raspberry Pi 2 Model B\n> ");
-      }else{
-	eq = 1;
-	uart_puts("\nCommand not found\n> ");
-      }
-      
-      i = 0;
-    }
-  }
-  */
+void uart_write_char_to_lcd(uint8_t c)
+{
+  uart_put_ascii(0xAA);
+  uart_put_ascii(0x25);
+  uart_putc(c);
+  uart_put_ascii(0x0D);
 }
