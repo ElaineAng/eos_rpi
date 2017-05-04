@@ -31,12 +31,13 @@ $(KERN_DIR)/%.o: $(KERN_DIR)%.c
 
 $(TARGET): $(OBJS) linker.ld
 	$(CC) -T linker.ld -o $@ $(CFLAGS) -nostdlib $(OBJS)
+	$(OBJCOPY) $(TARGET) -O binary $(OS).img
 
 qemu: $(TARGET)
 	$(QEMU) $(QEMUOPTS)
 
-img: $(TARGET)
-	$(OBJCOPY) $(TARGET) -O binary $(OS).img
+
+
 
 gdb:
 	arm-none-eabi-gdb
