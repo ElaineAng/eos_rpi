@@ -14,7 +14,7 @@ TARGET = $(OS).elf
 
 QEMUOPTS = -kernel $(TARGET) -M raspi2 -m 256 -serial mon:stdio -D qemu.log -nographic
 
-CFLAGS := -O2 -Wall -Wextra -mcpu=cortex-a7 -fpic -ffreestanding -std=gnu99 -I include
+CFLAGS := -O2 -Wall -Wextra -mcpu=cortex-a7 -fpic -ffreestanding -std=c99 -nostdlib -nostdinc -I include
 
 OBJS = boot.o $(KERN_DIR)/uart.o $(KERN_DIR)/timer.o $(KERN_DIR)/kernel.o
 

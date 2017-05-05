@@ -8,10 +8,10 @@ extern "C" /* Use C linkage for kernel_main. */
 
 struct proc
 {
-  uint8_t id;      // process id
+  uint8_t pid;      // process id
   uint32_t exp;    // expected finshing time
   uint32_t cur;    // current running time
-  uint8_t content; // content in this process (denote by a character)
+  uint8_t ctnt; // content in this process (denote by a character)
   uint8_t init_c;  // initial value (only interest for this simulation purpose)
   uint16_t cc;     // current count (only interest for this simulation purpose)
   uint8_t fin;     // if the process finishes
@@ -56,28 +56,28 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
   int proc_num = 3;
 
   /* Initialize */
-  p1.id = 0x31; 
+  p1.pid = 0x31; 
   p1.exp = 40;
   p1.cur = 0;
-  p1.content = 0x61; // from a to j
+  p1.ctnt = 0x61; // from a to j
   p1.init_c = 0x61;
   p1.cc = 0;
   p1.fin = 0;
   p1.run = 1;
 
-  p2.id = 0x32;
+  p2.pid = 0x32;
   p2.exp = 20;
   p2.cur = 0;
-  p2.content = 0x41; // from A to J 
+  p2.ctnt = 0x41; // from A to J 
   p2.init_c = 0x41;
   p2.cc = 0; 
   p2.fin = 0;
   p2.run = 1;
 
-  p3.id = 0x33;
+  p3.pid = 0x33;
   p3.exp = 60;
   p3.cur = 0;
-  p3.content = 0x30; // from 0 to 9
+  p3.ctnt = 0x30; // from 0 to 9
   p3.init_c = 0x30;
   p3.cc = 0;
   p3.fin = 0;
@@ -110,19 +110,19 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
     if (! cp -> fin){
       cp->run = 1;    
       
-      //           uart_putc(cp->id);
-      //      uart_putc(cp->content);
+      //           uart_putc(cp->pid);
+      //      uart_putc(cp->ctnt);
       //	    uart_putc('\n');
 
       // Clear screen and display info
       clr_lcd();
-      uart_write_char_to_lcd(cp->id);
+      uart_write_char_to_lcd(cp->pid);
       uart_write_to_lcd(": ");
-      uart_write_char_to_lcd(cp->content);
+      uart_write_char_to_lcd(cp->ctnt);
       delay(0xFF000);
       
       // Incrementing necessary counters
-      cp->content += 0x1;
+      cp->ctnt += 0x1;
       cp->cc += 1;
       cp->cur += 1;
       
@@ -134,14 +134,14 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	// display finish info
 	clr_lcd();
 	uart_write_to_lcd("Process ");
-	uart_write_char_to_lcd(cp->id);
+	uart_write_char_to_lcd(cp->pid);
 	uart_write_to_lcd(" finished!");
 	delay(0x3F0000);
       }
 
       // Reset necessary counters
       if (cp->cc >= 10){
-	cp->content = cp->init_c;
+	cp->ctnt = cp->init_c;
 	cp->cc = 0;
       }
       
